@@ -1,0 +1,6 @@
+@ResolveAI.Api_HostAddress = http://localhost:5049
+
+GET {{ResolveAI.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
