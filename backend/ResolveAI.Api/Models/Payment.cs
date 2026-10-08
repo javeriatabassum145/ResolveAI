@@ -17,4 +17,6 @@ public class Payment
     public ICollection<Refund> Refunds { get; set; } = new List<Refund>();
 
     public ICollection<PaymentEvent> Events { get; set; } = new List<PaymentEvent>();
+
+    public ICollection<Investigation> Investigations { get; set; } = new List<Investigation>();
 }

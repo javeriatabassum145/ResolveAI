@@ -1,4 +1,6 @@
-﻿namespace ResolveAI.Api.Models;
+﻿using System.Text.Json.Serialization;
+
+namespace ResolveAI.Api.Models;
 
 public class Investigation
 {
@@ -20,5 +22,6 @@ public class Investigation
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public Payment Payment { get; set; } = null!;
+    [JsonIgnore]
+    public Payment? Payment { get; set; }
 }

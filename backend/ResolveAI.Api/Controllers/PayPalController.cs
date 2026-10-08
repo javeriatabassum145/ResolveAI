@@ -1,61 +1,61 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ResolveAI.Api.Data;
-using ResolveAI.Api.Models;
+using ResolveAI.Api.Services;
 
 namespace ResolveAI.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class PaymentsController : ControllerBase
+public class PayPalController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly PayPalService _payPalService;
 
-    public PaymentsController(AppDbContext context)
+    public PayPalController(PayPalService payPalService)
     {
-        _context = context;
+        _payPalService = payPalService;
     }
 
-    [HttpGet]
-    public async Task<IActionResult> GetPayments()
+    [HttpGet("test")]
+    public async Task<IActionResult> Test()
     {
-        var payments = await _context.Payments
-            .Include(p => p.Refunds)
-            .Include(p => p.Events)
-            .ToListAsync();
-
-        return Ok(payments);
-    }
-
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetPayment(int id)
-    {
-        var payment = await _context.Payments
-            .Include(p => p.Refunds)
-            .Include(p => p.Events)
-            .FirstOrDefaultAsync(p => p.Id == id);
-
-        if (payment == null)
+        try
         {
-            return NotFound(new
+            var token =
+                await _payPalService.GetAccessTokenAsync();
+
+            return Ok(new
             {
-                message = "Payment not found."
+                message = "PayPal connection successful!",
+                tokenReceived = !string.IsNullOrEmpty(token)
             });
         }
-
-        return Ok(payment);
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                message = "PayPal connection failed.",
+                error = ex.Message
+            });
+        }
     }
 
-    [HttpPost]
-    public async Task<IActionResult> CreatePayment(Payment payment)
+    [HttpGet("orders/{orderId}")]
+    public async Task<IActionResult> GetOrder(
+        string orderId)
     {
-        _context.Payments.Add(payment);
+        try
+        {
+            var order =
+                await _payPalService.GetOrderAsync(orderId);
 
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction(
-            nameof(GetPayment),
-            new { id = payment.Id },
-            payment);
+            return Ok(order);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                message = "Unable to retrieve PayPal order.",
+                error = ex.Message
+            });
+        }
     }
 }

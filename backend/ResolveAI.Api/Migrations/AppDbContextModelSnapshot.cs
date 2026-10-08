@@ -31,7 +31,8 @@ namespace ResolveAI.Api.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal?>("Confidence")
-                        .HasColumnType("numeric");
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -72,7 +73,8 @@ namespace ResolveAI.Api.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -132,7 +134,8 @@ namespace ResolveAI.Api.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -162,7 +165,7 @@ namespace ResolveAI.Api.Migrations
             modelBuilder.Entity("ResolveAI.Api.Models.Investigation", b =>
                 {
                     b.HasOne("ResolveAI.Api.Models.Payment", "Payment")
-                        .WithMany()
+                        .WithMany("Investigations")
                         .HasForeignKey("PaymentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -195,6 +198,8 @@ namespace ResolveAI.Api.Migrations
             modelBuilder.Entity("ResolveAI.Api.Models.Payment", b =>
                 {
                     b.Navigation("Events");
+
+                    b.Navigation("Investigations");
 
                     b.Navigation("Refunds");
                 });
