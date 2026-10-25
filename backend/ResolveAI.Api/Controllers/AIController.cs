@@ -16,19 +16,16 @@ public class AIController : ControllerBase
 
     [HttpPost("investigate/{paymentId:int}")]
     public async Task<IActionResult> Investigate(
-        int paymentId)
+        int paymentId,
+        [FromBody] AIQuestionRequest request)
     {
         try
         {
-            var context =
-                await _aiService
-                    .BuildInvestigationContextAsync(paymentId);
-
-            return Ok(new
-            {
+            var result = await _aiService.InvestigateAsync(
                 paymentId,
-                context
-            });
+                request.Question);
+
+            return Ok(result);
         }
         catch (KeyNotFoundException ex)
         {
@@ -37,5 +34,18 @@ public class AIController : ControllerBase
                 message = ex.Message
             });
         }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                message = "AI investigation failed.",
+                error = ex.Message
+            });
+        }
     }
+}
+
+public class AIQuestionRequest
+{
+    public string Question { get; set; } = string.Empty;
 }

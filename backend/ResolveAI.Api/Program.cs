@@ -5,7 +5,12 @@ using ResolveAI.Api.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Controllers
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler =
+            System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 
 // PostgreSQL
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -14,8 +19,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Services
 builder.Services.AddHttpClient<PayPalService>();
+builder.Services.AddHttpClient<AIInvestigationService>();
 builder.Services.AddScoped<InvestigationService>();
-builder.Services.AddScoped<AIInvestigationService>();
+
 
 // CORS
 builder.Services.AddCors(options =>

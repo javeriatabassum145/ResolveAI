@@ -109,4 +109,136 @@ public class PayPalService
 
         return document.RootElement.Clone();
     }
+
+
+    public async Task<JsonElement> CreateOrderAsync(
+        decimal amount,
+        string currency = "USD")
+    {
+        if (amount <= 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(amount), "Amount must be greater than zero.");
+        }
+
+        var token = await GetAccessTokenAsync();
+
+        var payload = new
+        {
+            intent = "CAPTURE",
+            purchase_units = new[]
+            {
+            new
+            {
+                amount = new
+                {
+                    currency_code = currency,
+                    value = amount.ToString("F2",
+                        System.Globalization.CultureInfo.InvariantCulture)
+                }
+            }
+        }
+        };
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"{BaseUrl}/v2/checkout/orders");
+
+        request.Headers.Authorization =
+            new AuthenticationHeaderValue("Bearer", token);
+
+        request.Headers.Accept.Add(
+            new MediaTypeWithQualityHeaderValue("application/json"));
+
+        request.Content = new StringContent(
+            JsonSerializer.Serialize(payload),
+            Encoding.UTF8,
+            "application/json");
+
+        var response = await _httpClient.SendAsync(request);
+        var content = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(
+                $"PayPal order creation failed: {content}");
+        }
+
+        using var document = JsonDocument.Parse(content);
+        return document.RootElement.Clone();
+    }
+
+
+    public async Task<JsonElement> CaptureOrderAsync(string orderId)
+    {
+        if (string.IsNullOrWhiteSpace(orderId))
+        {
+            throw new ArgumentException("Order ID is required.", nameof(orderId));
+        }
+
+        var token = await GetAccessTokenAsync();
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"{BaseUrl}/v2/checkout/orders/{Uri.EscapeDataString(orderId)}/capture");
+
+        request.Headers.Authorization =
+            new AuthenticationHeaderValue("Bearer", token);
+
+        request.Headers.Accept.Add(
+            new MediaTypeWithQualityHeaderValue("application/json"));
+
+        request.Content = new StringContent(
+            "{}",
+            Encoding.UTF8,
+            "application/json");
+
+        var response = await _httpClient.SendAsync(request);
+        var content = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(
+                $"PayPal capture failed ({(int)response.StatusCode}): {content}");
+        }
+
+        using var document = JsonDocument.Parse(content);
+        return document.RootElement.Clone();
+    }
+
+
+    public async Task<JsonElement> GetCaptureAsync(string captureId)
+    {
+        if (string.IsNullOrWhiteSpace(captureId))
+        {
+            throw new ArgumentException(
+                "Capture ID is required.", nameof(captureId));
+        }
+
+        var token = await GetAccessTokenAsync();
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"{BaseUrl}/v2/payments/captures/{Uri.EscapeDataString(captureId)}");
+
+        request.Headers.Authorization =
+            new AuthenticationHeaderValue("Bearer", token);
+
+        request.Headers.Accept.Add(
+            new MediaTypeWithQualityHeaderValue("application/json"));
+
+        var response = await _httpClient.SendAsync(request);
+        var content = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(
+                $"PayPal capture retrieval failed: {content}");
+        }
+
+        using var document = JsonDocument.Parse(content);
+        return document.RootElement.Clone();
+    }
+
+
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ResolveAI.Api.Data;
 using ResolveAI.Api.Services;
@@ -10,25 +11,24 @@ namespace ResolveAI.Api.Controllers;
 public class InvestigationsController : ControllerBase
 {
     private readonly AppDbContext _context;
-    private readonly InvestigationService _investigationService;
+    private readonly AIInvestigationService _aiService;
 
     public InvestigationsController(
         AppDbContext context,
-        InvestigationService investigationService)
+        AIInvestigationService aiService)
     {
         _context = context;
-        _investigationService = investigationService;
+        _aiService = aiService;
     }
 
-    // POST /api/investigations/1
+    // POST /api/Investigations/4
     [HttpPost("{paymentId:int}")]
     public async Task<IActionResult> Investigate(
         int paymentId,
         [FromBody] InvestigationRequest? request)
     {
-        var paymentExists =
-            await _context.Payments.AnyAsync(
-                p => p.Id == paymentId);
+        var paymentExists = await _context.Payments
+            .AnyAsync(p => p.Id == paymentId);
 
         if (!paymentExists)
         {
@@ -38,60 +38,53 @@ public class InvestigationsController : ControllerBase
             });
         }
 
-        var question =
-            request?.Question
-            ?? "Why does this payment look incorrect?";
+        var question = string.IsNullOrWhiteSpace(request?.Question)
+            ? "Investigate this payment for anomalies and refund discrepancies."
+            : request.Question.Trim();
 
         try
         {
-            var investigation =
-                await _investigationService.InvestigateAsync(
-                    paymentId,
-                    question);
+            var result = await _aiService.InvestigateAsync(
+                paymentId,
+                question);
 
-            return Ok(investigation);
+            return Ok(result);
         }
         catch (Exception ex)
         {
+            // Log the actual error in the backend terminal.
+            Console.Error.WriteLine(ex);
+
             return StatusCode(500, new
             {
-                message = "Investigation failed.",
-                error = ex.Message
+                message = "AI investigation failed. Check the backend logs."
             });
         }
     }
 
-    // GET /api/investigations
+    // GET /api/Investigations
     [HttpGet]
     public async Task<IActionResult> GetInvestigations()
     {
         var investigations = await _context.Investigations
-            .Include(i => i.Payment)
             .OrderByDescending(i => i.CreatedAt)
+            .Select(i => new
+            {
+                i.Id,
+                i.PaymentId,
+                i.Question,
+                i.Status,
+                i.Summary,
+                i.RootCause,
+                i.Recommendation,
+                i.Confidence,
+                i.RiskLevel,
+                i.RiskScore,
+                i.CreatedAt
+            })
             .ToListAsync();
 
         return Ok(investigations);
-    }
-
-    // GET /api/investigations/1
-    [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetInvestigation(
-        int id)
-    {
-        var investigation =
-            await _context.Investigations
-                .Include(i => i.Payment)
-                .FirstOrDefaultAsync(i => i.Id == id);
-
-        if (investigation == null)
-        {
-            return NotFound(new
-            {
-                message = "Investigation not found."
-            });
-        }
-
-        return Ok(investigation);
     }
 }
 

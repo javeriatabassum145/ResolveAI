@@ -20,6 +20,10 @@ public class Investigation
 
     public decimal? Confidence { get; set; }
 
+    public int? RiskScore { get; set; }
+
+    public string? RiskLevel { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     [JsonIgnore]

@@ -4,6 +4,8 @@ public class AIInvestigationResult
 {
     public string RiskLevel { get; set; } = string.Empty;
 
+    public int RiskScore { get; set; }
+
     public string Summary { get; set; } = string.Empty;
 
     public string RootCause { get; set; } = string.Empty;

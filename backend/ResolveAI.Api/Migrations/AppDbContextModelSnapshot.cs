@@ -47,6 +47,12 @@ namespace ResolveAI.Api.Migrations
                     b.Property<string>("Recommendation")
                         .HasColumnType("text");
 
+                    b.Property<string>("RiskLevel")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("RiskScore")
+                        .HasColumnType("integer");
+
                     b.Property<string>("RootCause")
                         .HasColumnType("text");
 
