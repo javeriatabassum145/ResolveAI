@@ -293,12 +293,6 @@ AI-generated findings should be reviewed by a human investigator. A risk score o
 
 **Technologies:** React, ASP.NET Core, PostgreSQL, PayPal Sandbox, Google Gemini AI
 
-**Developer:** Javeria Tabassum
-
-**GitHub:** ADD_YOUR_GITHUB_REPOSITORY_URL_HERE
-
-**Demo Video:** ADD_YOUR_YOUTUBE_DEMO_URL_HERE
-
 ---
 
 *Built for the PayPal AI Hackathon.*
